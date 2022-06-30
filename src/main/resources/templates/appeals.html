@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Задачи</title>
+    <meta charset="UTF-8">
+    <link th:href="@{/css/styles.css}" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/additional-methods.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600&family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{font-awesome/css/font-awesome.min.css}">
+    <script th:src="@{/js/dnd.js}" defer></script>
+</head>
+<body>
+<div id="cover"></div>
+<div class="sidenav">
+    <a title="Главная" th:href="@{/home}" id="user_initials">
+        <p th:text="${#authentication.getPrincipal().getEmployee().getInitials()}"></p>
+    </a>
+    <a title="Адреса" th:href="@{/addresses}" class="menu">
+        <i class="fa fa-map-signs" aria-hidden="true"></i>
+    </a>
+    <a title="Клиенты" th:href="@{/clients}" class="menu">
+        <i class="fa fa-users" aria-hidden="true"></i>
+    </a>
+    <a title="Контракты" th:href="@{/contracts}" class="menu">
+        <i class="fa fa-folder" aria-hidden="true"></i>
+    </a>
+    <a title="Задачи" th:href="@{/appeals}" class="menu">
+        <i class="fa fa-tasks" aria-hidden="true"></i>
+    </a>
+    <a title="Сотрудники" th:href="@{/employees}" class="menu">
+        <i class="fa fa-id-badge" aria-hidden="true"></i>
+    </a>
+    <form class="form_logout" th:action="@{/logout}" method="post">
+        <button type="submit">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+        </button>
+    </form>
+</div>
+<div class="main">
+    <div id="ex2" class="modal">
+        <form id="clientForm">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <label>Имя*: <input class="full_inp" type="text" name="firstname" required></label>
+            <label>Фамилия*: <input class="full_inp" type="text" name="lastname" required></label>
+            <label>Отчество: <input class="full_inp" type="text" name="upname"></label>
+            <label>Телефон*: <input class="full_inp" type="text" name="phone" required></label>
+            <label>Email: <input class="full_inp" type="text" name="email"></label>
+            <input type="submit" class="set_employee" onclick="updateSelect()" value="Сохранить">
+        </form>
+        <a href="#" id="ex2_close" rel="modal:close" hidden>Close</a>
+    </div>
+    <div class="jquery-modal blocker current" style="display: none">
+        <div class="modal" id="ex1" style="display: none;">
+            <form id="add_appeal" th:action="@{/appeals/add}" th:object="${appeal}" method="post">
+                <input type="hidden"
+                        th:name="${_csrf.parameterName}"
+                        th:value="${_csrf.token}" />
+                <select name="contract" id="contract">
+                    <option th:value="${null}" th:text="'Выберите договор'" />
+                    <option th:each="contract : ${contracts}" th:value="${contract.id}" th:text="${contract.id}"
+                    />
+                </select>
+                <select name="address" id="address">
+                    <option th:value="${null}" th:text="'Выберите адрес'" />
+                    <option th:each="address : ${addresses}" th:value="${address.id}" th:text="${address.city}+', '+
+                    ${address.street}+', '+${address.build}+', '+${address.ent}"
+                    />
+                </select>
+                <label>квартира: <input type="text" id="appart" th:field="*{appart}"></label>
+                <select name="client" id="client">
+                    <option th:value="${null}" th:text="'Выберите клиента'" />
+                    <option th:each="client : ${clients}" th:value="${client.id}" th:text="${client.lastname}+', '+
+                    ${client.firstname}+', '+${client.upname}+', '+${client.phone}"
+                    />
+                </select>
+                <p><a href="#ex2" rel="modal:open">+Новый клиент</a></p>
+                <input type="date" th:field="*{taskdate}" style="width: 49%">
+                <select name="tasktime" style="width: 49%">
+                    <option th:each="time : ${times}" th:value="${time.id}" th:text="${time.time}"
+                    />
+                </select>
+                <select name="manager" hidden>
+                    <option th:value="${#authentication.getPrincipal().getEmployee().getId()}" />
+                </select>
+                <label>Комментарий:</label>
+                <textarea class="comm" th:field="*{comment}">Комментарий</textarea>
+                <input type="submit" value="Сохранить" class="set_employee">
+            </form>
+            <a href="#close-modal" rel="modal:close" class="close-modal ">Close</a>
+        </div>
+    </div>
+    <p class="add_appeal"><a href="#ex1" rel="modal:open">+Добавить заявку</a></p>
+    <div style="display: flex">
+        <div id="con1" class="container con">
+            <div class="con_title">Несортированные</div>
+            <hr class="crossline">
+            <div class="draggable" draggable="true" th:each="el: ${appeals_dont_sort}">
+                <div class="home_details_title">
+                    <p th:text="${el.id}" ></p>
+                    <p th:text="${#dates.format(el.date, 'dd.MM.yyyy')}" style="float: right"></p>
+                </div>
+                <div th:text="${el.contract != null} ? 'Номер договора: '+${el.contract.id} : 'Новый договор'"></div>
+                <div th:text="'Клиент: '+${el.client}"></div>
+                <div th:text="'Адрес объекта: '+${el.address}+', кв. '+${el.appart}"></div>
+                <div th:text="'Дата исполнения: '+${#dates.format(el.taskdate, 'dd.MM.yyyy')}+', период: '+${el.tasktime.time}"></div>
+                <div class="by_employee" th:text="${el.employee != null} ? 'Ответственное лицо: '+${el.employee.lastname}+' '+${el.employee.firstname}+' '+${el.employee.upname} : 'Не назначено'"></div>
+                <div class="form_draggable">
+                    <input class="field_id" th:value="${el.id}">
+                    <select class="field_employee">
+                        <option th:value="${null}" th:text="'Выберите сотрудника'" />
+                        <option th:each="et, ind : ${employees}" th:value="${employees[ind.index].id}" th:text="${employees[ind.index].lastname}+' '+${employees[ind.index].firstname}+' '+${employees[ind.index].upname}+' '+${employees[ind.index].phone}+', Текущих задач: '+${empstasks[ind.index]}"
+                        />
+                    </select>
+                    <input type="submit" class="set_employee" value="Сохранить">
+                </div>
+            </div>
+        </div>
+        <div id="con2" class="container con">
+            <div class="con_title">В работе</div>
+            <hr class="crossline">
+            <div class="draggable" draggable="true" th:each="el: ${appeals_in_work}">
+                <div class="home_details_title">
+                    <p th:text="${el.id}"></p>
+                    <p th:text="${#dates.format(el.date, 'dd.MM.yyyy')}" style="float: right"></p>
+                </div>
+                <div th:text="${el.contract != null} ? 'Номер договора: '+${el.contract.id} : 'Новый договор'"></div>
+                <div th:text="'Клиент: '+${el.client}"></div>
+                <div th:text="'Адрес объекта: '+${el.address}+', кв. '+${el.appart}"></div>
+                <div th:text="'Дата исполнения: '+${#dates.format(el.taskdate, 'dd.MM.yyyy')}+', период: '+${el.tasktime.time}"></div>
+                <div class="by_employee" th:text="${el.employee != null} ? 'Ответственное лицо: '+${el.employee.lastname}+' '+${el.employee.firstname}+' '+${el.employee.upname} : 'Не назначено'"></div>
+                <div class="form_draggable" hidden>
+                    <input class="field_id" th:value="${el.id}">
+                    <select class="field_employee">
+                        <option th:value="${null}" th:text="'Выберите сотрудника'" />
+                        <option th:each="et, ind : ${employees}" th:value="${employees[ind.index].id}" th:text="${employees[ind.index].lastname}+' '+${employees[ind.index].firstname}+' '+${employees[ind.index].upname}+' '+${employees[ind.index].phone}+', Текущих задач: '+${empstasks[ind.index]}"
+                        />
+                    </select>
+                    <input type="submit" class="set_employee" value="Сохранить">
+                </div>
+            </div>
+
+        </div>
+        <div class="con">
+            <div class="con_title">Выполненные</div>
+            <hr class="crossline">
+            <div class="draggable" draggable="false" th:each="el: ${appeals_done}">
+                <div class="home_details_title">
+                    <p th:text="${el.id}"></p>
+                    <p th:text="${#dates.format(el.date, 'dd.MM.yyyy')}" style="float: right"></p>
+                </div>
+                <div th:text="${el.contract != null} ? 'Номер договора: '+${el.contract.id} : 'Новый договор'"></div>
+                <div th:text="'Клиент: '+${el.client}"></div>
+                <div th:text="'Адрес объекта: '+${el.address}+', кв. '+${el.appart}"></div>
+                <div th:text="'Дата исполнения: '+${#dates.format(el.taskdate, 'dd.MM.yyyy')}+', период: '+${el.tasktime.time}"></div>
+                <div class="by_employee" th:text="${el.employee != null} ? 'Ответственное лицо: '+${el.employee.lastname}+' '+${el.employee.firstname}+' '+${el.employee.upname} : 'Не назначено'"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    jQuery.validator.setDefaults({
+        debug: true,
+        success: "valid"
+    });
+
+    $('a[href="#ex2"]').click(function(event) {
+        event.preventDefault();
+        $("#ex2").modal({
+            closeExisting: false
+        });
+    });
+
+    function updateSelect() {
+        var $form = $('#clientForm');
+        $form.validate();
+        if ($form.valid()) {
+            $.ajax({
+                url: "/clients/add",
+                type: 'post',
+                data: $form.serialize(),
+                success: function (clients) {
+                    $("#client").empty();
+                    $("#client").append($('<option>', {
+                        value: 'null',
+                        text: 'Выберите клиента'
+                    }));
+                    for (var el in clients) {
+                        $("#client").append($('<option>', {
+                            value: clients[el]['id'],
+                            text: clients[el]['lastname'] + ", "
+                                + clients[el]['firstname'] + ", " + clients[el]['upname'] +
+                                ", " + clients[el]['phone']
+                        }));
+                    }
+                },
+                error: function (clients, error) {
+                    console.log('error', clients);
+                }
+            });
+            $('#clientForm')[0].reset();
+            $("#ex2_close").trigger('click');
+        }
+    }
+    $('#contract').on('change', function() {
+        if ($(this).val() === '') {
+            $('#client').val('').trigger('change');
+            $('#address').val('').trigger('change');
+            $('#appart').val('').trigger('change');
+        } else {
+            $.ajax({
+                url: '/contract/' + $(this).val(),
+                type: 'get',
+                success: function (response) {
+                    if ($('#client').find("option[value='" + response.client.lastname+', '+
+                        response.client.firstname+', '+response.client.upname+', '+response.client.phone + "']")) {
+                        $('#client').val(response.client.id).trigger('change');
+                    }
+                    $('#client').val(response.client.id);
+                    if ($('#address').find("option[value='" + response.address.city+', '+
+                        response.address.street+', '+response.address.build+', '+response.address.ent + "']")) {
+                        $('#address').val(response.address.id).trigger('change');
+                    }
+                    $('#appart').val(response.appart);
+                },
+                error: function (response, error) {
+                    console.log('error', response);
+                }
+            });
+        }
+    })
+
+    $(document).ready(function() {
+        $('#contract').select2({
+            placeholder: "Номер договора",
+            maximumSelectionLength: 2,
+            language: "ru"
+        });
+        $('#address').select2({
+            placeholder: "Выберите адрес",
+            maximumSelectionLength: 2,
+            language: "ru"
+        });
+        $('#client').select2({
+            placeholder: "Выберите клиента",
+            maximumSelectionLength: 2,
+            language: "ru"
+        });
+        $('.field_employee').select2({
+            placeholder: "Выберите сотрудника",
+            maximumSelectionLength: 2,
+            language: "ru"
+        });
+    });
+</script>
+</body>
+</html>

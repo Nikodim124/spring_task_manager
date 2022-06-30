@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Логин</title>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600&family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+<div class="login_cont">
+    <div class="signin_title">Логин</div>
+    <div class="privet_text">Привет! Авторизуйся в системе, чтобы начать работу</div>
+    <div th:if="${param.error}" class="invalid">
+        Неправильный пароль
+    </div>
+    <div th:if="${param.logout}" class="logout">
+        Вы вышли из системы
+    </div>
+    <form th:action="@{/login}" class="form_login" method="post">
+        <input type="text" name="username" class="login" placeholder="Логин">
+        <input type="password" name="password" class="password" placeholder="Пароль">
+        <input type="submit" value="Войти" class="login_btn">
+    </form>
+</div>
+</body>
+</html>

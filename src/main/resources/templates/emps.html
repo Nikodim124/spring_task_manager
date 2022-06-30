@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Сотрудники</title>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600&family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{font-awesome/css/font-awesome.min.css}">
+    <link href="../static/css/styles.css" th:href="@{/css/styles.css}" rel="stylesheet" />
+</head>
+<body>
+<div class="sidenav">
+    <a title="Главная" th:href="@{/home}" id="user_initials">
+        <p th:text="${#authentication.getPrincipal().getEmployee().getInitials()}"></p>
+    </a>
+    <a title="Адреса" th:href="@{/addresses}" class="menu">
+        <i class="fa fa-map-signs" aria-hidden="true"></i>
+    </a>
+    <a title="Клиенты" th:href="@{/clients}" class="menu">
+        <i class="fa fa-users" aria-hidden="true"></i>
+    </a>
+    <a title="Контракты" th:href="@{/contracts}" class="menu">
+        <i class="fa fa-folder" aria-hidden="true"></i>
+    </a>
+    <a title="Задачи" th:href="@{/appeals}" class="menu">
+        <i class="fa fa-tasks" aria-hidden="true"></i>
+    </a>
+    <a title="Сотрудники" th:href="@{/employees}" class="menu">
+        <i class="fa fa-id-badge" aria-hidden="true"></i>
+    </a>
+    <form class="form_logout" th:action="@{/logout}" method="post">
+        <button type="submit">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+        </button>
+    </form>
+</div>
+
+<div class="main">
+    <div class="title">
+        <div class="contract_title">Сотрудники</div>
+        <input type="text" id="contract_search" placeholder="Поиск сотрудника">
+    </div>
+    <div id="all_emps">
+        <div th:each="el : ${employees}" class="emps">
+            <div class="me">
+                <span th:text="${el.getInitials()}" class="inic"></span>
+                <span th:text="${el.post.name}" class="post"></span>
+            </div>
+            <div class="all_emps_det first_all_emps_det e_name" th:text="${el.firstname}+' '+${el.lastname}+' '+${el.upname}"></div>
+            <div class="all_emps_det e_phone" th:text="${el.phone}"></div>
+            <div class="all_emps_det" th:text="${el.email}"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#contract_search').keyup(function () {
+        let emps = document.querySelectorAll('.emps');
+        let search_query = $("#contract_search").val();
+        for (var i = 0; i < emps.length; i++) {
+            if((emps[i].querySelector('.e_name').innerText.toLowerCase()
+                    .includes(search_query.toLowerCase()))
+                || (emps[i].querySelector('.e_phone').innerText.toLowerCase()
+                    .includes(search_query.toLowerCase()))
+            ) {
+                emps[i].classList.remove("is_hidden");
+            } else {
+                emps[i].classList.add("is_hidden");
+            }
+        }
+    });
+</script>
+</body>
+</html>

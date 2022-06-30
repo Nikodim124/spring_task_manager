@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Договоры</title>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600&family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/additional-methods.min.js"></script>
+    <link rel="stylesheet" th:href="@{font-awesome/css/font-awesome.min.css}">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+<div class="sidenav">
+    <a title="Главная" th:href="@{/home}" id="user_initials">
+        <p th:text="${#authentication.getPrincipal().getEmployee().getInitials()}"></p>
+    </a>
+    <a title="Адреса" th:href="@{/addresses}" class="menu">
+        <i class="fa fa-map-signs" aria-hidden="true"></i>
+    </a>
+    <a title="Клиенты" th:href="@{/clients}" class="menu">
+        <i class="fa fa-users" aria-hidden="true"></i>
+    </a>
+    <a title="Контракты" th:href="@{/contracts}" class="menu">
+        <i class="fa fa-folder" aria-hidden="true"></i>
+    </a>
+    <a title="Задачи" th:href="@{/appeals}" class="menu">
+        <i class="fa fa-tasks" aria-hidden="true"></i>
+    </a>
+    <a title="Сотрудники" th:href="@{/employees}" class="menu">
+        <i class="fa fa-id-badge" aria-hidden="true"></i>
+    </a>
+    <form class="form_logout" th:action="@{/logout}" method="post">
+        <button type="submit">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+        </button>
+    </form>
+</div>
+
+<div class="main">
+    <div id="ex1" class="modal">
+        <form id="add_contract" th:action="@{/contracts/add}" th:object="${contract}" method="post">
+            <label>Адрес*: <select class="cont_select mc" name="address" id="address" required>
+                <option th:value="${null}" th:text="'Выберите адрес'" />
+                <option th:each="address : ${addresses}" th:value="${address.id}" th:text="${address.city}+', '+
+                    ${address.street}+', '+${address.build}+', '+${address.ent}"
+                />
+            </select></label>
+            <label>Квартира*: <input class="cont_ap mc" type="text" th:field="*{appart}" name="appartments" required></label>
+            <label>Клиент*: <select class="cont_select mc" name="client" id="client" required>
+                <option th:value="${null}" th:text="'Выберите клиента'" />
+                <option th:each="client : ${clients}" th:value="${client.id}" th:text="${client.lastname}+', '+
+                    ${client.firstname}+', '+${client.upname}+', '+${client.phone}"
+                />
+            </select></label>
+            <label>Интернет: <input class="mc mr" th:field="*{internet}" type="checkbox" name="inet"></label>
+            <label>ТВ: <input class="mc mr" th:field="*{tv}" type="checkbox" name="tv"></label>
+            <label>Телефон: <input class="mc" th:field="*{phone}" type="checkbox" name="phone"></label>
+            <input type="submit" class="set_employee" value="Сохранить">
+        </form>
+        <a href="#" id="ex1_close" rel="modal:close" hidden>Close</a>
+    </div>
+
+    <div class="title">
+        <div class="contract_title">Договоры</div>
+        <p class="add_appeal"><a href="#ex1" rel="modal:open">+Новый договор</a></p>
+        <input type="text" id="contract_search" placeholder="Поиск договора">
+    </div>
+    <div th:each="el, iter : ${contracts}">
+        <a th:onclick="'javascript:open_details(contract'+${iter.index}+')'" class="contract">
+            <span th:text="${el.id}" class="contract_id"></span>
+            <span th:if="${el.internet}" class="contract_icon" title="Интернет">
+                <i class="fa fa-wifi" aria-hidden="true"></i>
+            </span>
+            <span th:if="${el.tv}" class="contract_icon" title="ТВ">
+                <i class="fa fa-television" aria-hidden="true"></i>
+            </span>
+            <span th:if="${el.phone}" class="contract_icon" title="Связь">
+                <i class="fa fa-phone" aria-hidden="true"></i>
+            </span>
+            <span th:if="${el.active}" class="contract_active">
+                Активен
+            </span>
+            <span th:unless="${el.active}" class="contract_active disactive">
+                Не активен
+            </span>
+        </a>
+        <div class="expandable" th:id="|contract${iter.index}|">
+            <div>
+                <span class="contract_details_title">Адрес: </span>
+                <span th:text="${el.address}+', кв. '+${el.appart}" class="contract_details"></span>
+            </div>
+            <div>
+                <span class="contract_details_title">Клиент: </span>
+                <span th:text="${el.client}" class="contract_details"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#contract_search').keyup(function () {
+        let contracts = document.querySelectorAll('.contract');
+        let search_query = $("#contract_search").val();
+        for (var i = 0; i < contracts.length; i++) {
+            if(contracts[i].querySelector('.contract_id').innerText.toLowerCase()
+                .includes(search_query.toLowerCase())) {
+                contracts[i].classList.remove("is_hidden");
+            } else {
+                contracts[i].classList.add("is_hidden");
+            }
+        }
+    });
+
+    function open_details(source) {
+        if($(source).height() > 0) {
+            $(source).css('height', '0');
+        } else {
+            $('.expandable').css('height', '0');
+            $(source).css('height', '110px');
+        }
+    }
+/*
+    var form = $('#contractForm');
+    $(form).on('click', function () {
+        console.log(form.serialize());
+    })
+    $(form).on("submit", function () {
+        form.validate();
+        if (form.valid()) {
+            $.ajax({
+                url: "/contracts/add",
+                type: 'post',
+                data: form.serialize(),
+                success: function (contract) {
+                    console.log(contract)
+                },
+                error: function (contract, error) {
+                    console.log('error', contract);
+                }
+            });
+            $('#contractForm')[0].reset();
+            $("#ex1_close").trigger('click');
+        }
+    })
+*/
+</script>
+</body>
+</html>

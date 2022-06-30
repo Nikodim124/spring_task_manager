@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Главная</title>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600&family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{font-awesome/css/font-awesome.min.css}">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+<div class="sidenav">
+    <a title="Главная" th:href="@{/home}" id="user_initials">
+        <p th:text="${#authentication.getPrincipal().getEmployee().getInitials()}"></p>
+    </a>
+    <a title="Адреса" th:href="@{/addresses}" class="menu">
+        <i class="fa fa-map-signs" aria-hidden="true"></i>
+    </a>
+    <a title="Клиенты" th:href="@{/clients}" class="menu">
+        <i class="fa fa-users" aria-hidden="true"></i>
+    </a>
+    <a title="Контракты" th:href="@{/contracts}" class="menu">
+        <i class="fa fa-folder" aria-hidden="true"></i>
+    </a>
+    <a title="Задачи" th:href="@{/appeals}" class="menu">
+        <i class="fa fa-tasks" aria-hidden="true"></i>
+    </a>
+    <a title="Сотрудники" th:href="@{/employees}" class="menu">
+        <i class="fa fa-id-badge" aria-hidden="true"></i>
+    </a>
+    <form class="form_logout" th:action="@{/logout}" method="post">
+        <button type="submit">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+        </button>
+    </form>
+</div>
+
+<div id="myModal" class="modalist">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <form id="employeeForm" th:action="@{/home/set_employee}" th:object="${appeal}" method="post">
+            <input id="field_id" th:field="*{id}" hidden>
+            На заявку по адресу:
+            <p id="field_address" style="width: 100%"></p>
+            назначить
+            <select name="employee" id="employee" style="width: 80%; margin: 15px">
+                <option th:value="${null}" th:text="'Выберите сотрудника'" />
+                <option th:each="et, ind : ${employees}" th:value="${employees[ind.index].id}" th:text="${employees[ind.index].lastname}+' '+${employees[ind.index].firstname}+' '+${employees[ind.index].upname}+' '+${employees[ind.index].phone}+', Текущих задач: '+${emptasks[ind.index]}"
+                />
+            </select>
+            <input class="home_set" type="submit" value="Сохранить">
+        </form>
+    </div>
+</div>
+
+<div class="main home_cont">
+    <div class="left_home">
+        <div class="title">
+            <div style="width: fit-content; display: inline-block;">
+                <div class="contract_title home_title" th:text="${man.firstname+' '+man.lastname}"></div>
+                <br>
+                <div class="home_post" th:text="${man.post.getName()}"></div>
+            </div>
+        </div>
+        <div class="home_but" id="ndtb">
+            <div>Незавершённые задачи</div>
+            <div class="home_count" th:text="${notdonetasksbefore.size()}"></div>
+        </div>
+        <div class="home_but" id="wt">
+            <div>Задачи недели (Актуальные)</div>
+            <div class="home_count" th:text="${weektasks.size()}"></div>
+        </div>
+        <div class="home_but" id="wtd">
+            <div>Задачи недели (Завершённые)</div>
+            <div class="home_count" th:text="${weektasksdone.size()}"></div>
+        </div>
+    </div>
+    <div class="right_home">
+        <div th:if="${notdonetasksbefore.size() > 0}">
+            <div th:each="el : ${notdonetasksbefore}" id="ndtb_cont" class="home_details ndtb_cont" th:classappend="${el.employee == null} ? 'war'">
+                <div class="home_details_title">
+                    <p th:text="${el.id}"></p>
+                    <p th:text="${#dates.format(el.date, 'dd.MM.yyyy')}" style="float: right;"></p>
+                </div>
+                <div th:text="${el.contract != null} ? 'Номер договора: '+${el.contract.id} : 'Новый договор'"></div>
+                <div th:text="'Клиент: '+${el.client}"></div>
+                <div th:text="'Адрес объекта: '+${el.address}+', кв. '+${el.appart}"></div>
+                <div th:text="'Дата исполнения: '+${#dates.format(el.taskdate, 'dd.MM.yyyy')}+', период: '+${el.tasktime.time}"></div>
+                <div th:text="${el.employee != null} ? 'Ответственное лицо: '+${el.employee.lastname}+' '+${el.employee.firstname}+' '+${el.employee.upname} : 'Не назначено'"></div>
+                <a th:href="@{/appeals/{id}(id=${el.id})}" class="set_but" th:classappend="${el.employee != null} ? 'is_hidden'">Назначить</a>
+            </div>
+        </div>
+        <div th:unless="${notdonetasksbefore.size() > 0}">
+            <div class="empty ndtb_cont">Пока ничего нет</div>
+        </div>
+
+        <div th:if="${weektasks.size() > 0}">
+            <div th:each="el : ${weektasks}" id="wt_cont" class="home_details wt_cont is_hidden" th:classappend="${el.employee == null} ? 'war'">
+                <div class="home_details_title">
+                    <p th:text="${el.id}"></p>
+                    <p th:text="${#dates.format(el.date, 'dd.MM.yyyy')}" style="float: right;"></p>
+                </div>
+                <div th:text="${el.contract != null} ? 'Номер договора: '+${el.contract.id} : 'Новый договор'"></div>
+                <div th:text="'Клиент: '+${el.client}"></div>
+                <div th:text="'Адрес объекта: '+${el.address}+', кв. '+${el.appart}"></div>
+                <div th:text="'Дата исполнения: '+${#dates.format(el.taskdate, 'dd.MM.yyyy')}+', период: '+${el.tasktime.time}"></div>
+                <div th:text="${el.employee != null} ? 'Ответственное лицо: '+${el.employee.lastname}+' '+${el.employee.firstname}+' '+${el.employee.upname} : 'Не назначено'"></div>
+                <a th:href="@{/appeals/{id}(id=${el.id})}" class="set_but" th:classappend="${el.employee != null} ? 'is_hidden'">Назначить</a>
+            </div>
+        </div>
+        <div th:unless="${weektasks.size() > 0}">
+            <div class="empty wt_cont">Пока ничего нет</div>
+        </div>
+
+        <div th:if="${weektasksdone.size() > 0}">
+            <div th:each="el : ${weektasksdone}" id="wtd_cont" class="home_details wtd_cont is_hidden">
+                <div class="home_details_title">
+                    <p th:text="${el.id}"></p>
+                    <p th:text="${#dates.format(el.date, 'dd.MM.yyyy')}" style="float: right;"></p>
+                </div>
+                <div th:text="${el.contract != null} ? 'Номер договора: '+${el.contract.id} : 'Новый договор'"></div>
+                <div th:text="'Клиент: '+${el.client}"></div>
+                <div th:text="'Адрес объекта: '+${el.address}+', кв. '+${el.appart}"></div>
+                <div th:text="'Дата исполнения: '+${#dates.format(el.taskdate, 'dd.MM.yyyy')}+', период: '+${el.tasktime.time}"></div>
+                <div th:text="${el.employee != null} ? 'Ответственное лицо: '+${el.employee.lastname}+' '+${el.employee.firstname}+' '+${el.employee.upname} : 'Не назначено'"></div>
+            </div>
+        </div>
+        <div th:unless="${weektasksdone.size() > 0}">
+            <div class="empty wtd_cont">Пока ничего нет</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var wt = $("#wt");
+    var ndtb = $("#ndtb");
+    var wtd = $("#wtd");
+    var ndtb_cont = $(".ndtb_cont");
+    var wt_cont = $(".wt_cont");
+    var wtd_cont = $(".wtd_cont");
+    var modal = $("#myModal");
+
+    $(".home_details a").on('click', function(event) {
+        event.preventDefault();
+        modal.css('display', 'block');
+        var href = $(this).attr('href');
+        $.get(href, function (response) {
+            $("#field_address").text('г. '+response.address.city+
+                ', ул. '+response.address.street+
+                ', '+response.address.build+
+                ', подъезд '+response.address.ent+
+                ', кв. '+response.appart);
+            $("#field_id").val(response.id);
+        });
+    })
+
+    $(".close").on('click', function() {
+        modal.css("display","none");
+    })
+
+    wt.on('click', function () {
+        ndtb_cont.addClass('is_hidden');
+        wtd_cont.addClass('is_hidden');
+        wt_cont.removeClass('is_hidden');
+    });
+
+    ndtb.on('click', function () {
+        wt_cont.addClass('is_hidden');
+        wtd_cont.addClass('is_hidden');
+        ndtb_cont.removeClass('is_hidden');
+    });
+
+    wtd.on('click', function () {
+        wt_cont.addClass('is_hidden');
+        ndtb_cont.addClass('is_hidden');
+        wtd_cont.removeClass('is_hidden');
+    });
+
+    $(document).ready(function() {
+        $('#employee').select2({
+            placeholder: "Выберите сотрудника",
+            maximumSelectionLength: 2,
+            language: "ru"
+        });
+    });
+</script>
+</body>
+</html>

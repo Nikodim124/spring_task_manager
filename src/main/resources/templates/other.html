@@ -1,0 +1,105 @@
+<div class="appeal_content" th:fragment="appeals_list">
+    <div style="width: 50px">
+        <div class="ap_but" id="apnd">
+            <div>
+                <i class="fa fa-times" aria-hidden="true"></i>
+            </div>
+        </div>
+        <div class="ap_but ap_but_done" id="apd">
+            <div>
+                <i class="fa fa-check" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+    <div class="apnd_cont">
+        <div class="time"></div>
+        <p class="time_value">10-15</p>
+        <div th:each="el: ${appealsfirst}" class="emp_appeals">
+            <a href="#ex1" rel="modal:open" th:attr="id=${el.id}">
+                <div class="home_details_title">
+                    <p th:text="${el.id}" class="modal_id"></p>
+                    <p th:text="${el.tasktime.time}" style="float: right;"></p>
+                </div>
+                <div th:text="'Клиент: '+${el.client}"></div>
+                <div th:text="'Адрес объекта: '+${el.address}+', кв. '+${el.appart}"></div>
+                <div class="app_last" th:text="${el.manager != null} ? 'Менеджер: '+${el.manager.lastname}+' '+${el.manager.firstname}+' '+${el.manager.upname} : 'Не назначено'"></div>
+            </a>
+        </div>
+        <div class="time"></div>
+        <p class="time_value">10-20</p>
+        <div th:each="el: ${appealssecond}" class="emp_appeals">
+            <a href="#ex1" rel="modal:open" th:attr="id=${el.id}">
+                <div class="home_details_title">
+                    <p th:text="${el.id}" class="modal_id"></p>
+                    <p th:text="${el.tasktime.time}" style="float: right;"></p>
+                </div>
+                <div th:text="'Клиент: '+${el.client}"></div>
+                <div th:text="'Адрес объекта: '+${el.address}+', кв. '+${el.appart}"></div>
+                <div class="app_last" th:text="${el.manager != null} ? 'Менеджер: '+${el.manager.lastname}+' '+${el.manager.firstname}+' '+${el.manager.upname} : 'Не назначено'"></div>
+            </a>
+        </div>
+        <div class="time"></div>
+        <p class="time_value">15-20</p>
+        <div th:each="el: ${appealsthird}" class="emp_appeals">
+            <a href="#ex1" rel="modal:open" th:attr="id=${el.id}">
+                <div class="home_details_title">
+                    <p th:text="${el.id}" class="modal_id"></p>
+                    <p th:text="${el.tasktime.time}" style="float: right;"></p>
+                </div>
+                <div th:text="'Клиент: '+${el.client}"></div>
+                <div th:text="'Адрес объекта: '+${el.address}+', кв. '+${el.appart}"></div>
+                <div class="app_last" th:text="${el.manager != null} ? 'Менеджер: '+${el.manager.lastname}+' '+${el.manager.firstname}+' '+${el.manager.upname} : 'Не назначено'"></div>
+            </a>
+        </div>
+    </div>
+    <div class="apd_cont is_hidden">
+        <div th:each="el: ${doneappeals}" class="emp_appeals">
+            <a href="#ex1" rel="modal:open" th:attr="id=${el.id}">
+                <div class="home_details_title">
+                    <p th:text="${el.id}" class="modal_id"></p>
+                    <p th:text="${el.tasktime.time}" style="float: right;"></p>
+                </div>
+                <div th:text="'Клиент: '+${el.client}"></div>
+                <div th:text="'Адрес объекта: '+${el.address}+', кв. '+${el.appart}"></div>
+                <div class="app_last" th:text="${el.manager != null} ? 'Менеджер: '+${el.manager.lastname}+' '+${el.manager.firstname}+' '+${el.manager.upname} : 'Не назначено'"></div>
+            </a>
+        </div>
+    </div>
+</div>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var appeals = /*[[${appeals}]]*/ "Appeals";
+    /*]]*/
+</script>
+<script>
+    var apnd = $("#apnd");
+    var apd = $("#apd");
+    var apnd_cont = $(".apnd_cont");
+    var apd_cont = $(".apd_cont");
+
+    apnd.on('click', function () {
+        apd_cont.addClass('is_hidden');
+        apnd_cont.removeClass('is_hidden');
+    });
+
+    apd.on('click', function () {
+        apnd_cont.addClass('is_hidden');
+        apd_cont.removeClass('is_hidden');
+    });
+
+    $(".emp_appeals a").on('click', function() {
+        var idd = $(this).attr('id');
+        $.ajax({
+            url: "/appeals_detail/" + idd,
+            type: 'get',
+            data: {'id': idd},
+            success: function (response) {
+                $("#ex1").empty();
+                $("#ex1").append(response);
+            },
+            error: function (response, error) {
+                console.log('error', response);
+            }
+        })
+    })
+</script>

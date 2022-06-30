@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Адреса</title>
+    <meta charset="UTF-8">
+    <link href="../static/css/styles.css" th:href="@{/css/styles.css}" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/additional-methods.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=apikey&lang=ru_RU"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600&family=Source+Sans+Pro:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{font-awesome/css/font-awesome.min.css}">
+    <script src="../static/js/script.js" th:src="@{/js/script.js}"></script>
+</head>
+<body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+        var addresses = /*[[${addresses}]]*/ "Addresses";
+    /*]]*/
+</script>
+<div class="sidenav">
+    <a title="Главная" th:href="@{/home}" id="user_initials">
+        <p th:text="${#authentication.getPrincipal().getEmployee().getInitials()}"></p>
+    </a>
+    <a title="Адреса" th:href="@{/addresses}" class="menu">
+        <i class="fa fa-map-signs" aria-hidden="true"></i>
+    </a>
+    <a title="Клиенты" th:href="@{/clients}" class="menu">
+        <i class="fa fa-users" aria-hidden="true"></i>
+    </a>
+    <a title="Контракты" th:href="@{/contracts}" class="menu">
+        <i class="fa fa-folder" aria-hidden="true"></i>
+    </a>
+    <a title="Задачи" th:href="@{/appeals}" class="menu">
+        <i class="fa fa-tasks" aria-hidden="true"></i>
+    </a>
+    <a title="Сотрудники" th:href="@{/employees}" class="menu">
+        <i class="fa fa-id-badge" aria-hidden="true"></i>
+    </a>
+    <form class="form_logout" th:action="@{/logout}" method="post">
+        <button type="submit">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+        </button>
+    </form>
+</div>
+<div class="main main_address">
+    <div class="title">
+        <div class="contract_title">Адреса</div>
+    </div>
+
+    <div class="r_address" style="float: left">
+        <div class="mc sub_title">Поиск по адресам:</div>
+        <label class="mc db"> Город: <input id="check_city" type="text"> </label>
+        <label class="mc db"> Улица: <input id="check_street" type="text"> </label>
+        <label class="mc db"> Номер дома: <input id="check_build" type="text"> </label>
+        <input class="mc chech_address" type="submit" id="search" value="Проверить доступность">
+
+        <div style="display: none" class="address_hidden address_hidden_false">Адрес не найден</div>
+        <div style="display: none" class="address_hidden address_hidden_true">Адрес доступен</div>
+    </div>
+    <div class="r_address">
+        <div class="mc sub_title">Добавить адрес</div>
+        <form th:action="@{/addresses/add_address}" th:object="${address}" method="post">
+            <label class="mc">Город*: <input id="city" class="mc full_inp" type="text" name="city" th:field="*{city}" onchange="getCoords()"></label>
+            <label class="mc">Улица*: <input id="street" class="mc full_inp" type="text" name="street" th:field="*{street}" onchange="getCoords()"></label>
+            <label class="mc">Строение*: <input id="build" class="mc full_inp" type="text" name="build" th:field="*{build}" onchange="getCoords()"></label>
+            <label class="mc">Подъезд*: <input class="mc full_inp" type="text" name="ent" th:field="*{ent}" required></label>
+            <label class="mc inline_right">Широта*: <input class="mc db" id="lat" type="text" th:field="*{lat}"> </label>
+            <label class="mc inline_right">Долгота*: <input class="mc db" id="lon" type="text" th:field="*{lon}"> </label>
+            <input type="submit" class="chech_address add_address" value="Сохранить">
+        </form>
+    </div>
+    <div id="map" class="map" style="width: calc(100% - 130px)"></div>
+</div>
+
+<script>
+    $('#search').on("click",function (){
+        $(".address_hidden").css("display", "none");
+        $.ajax({
+            type: 'GET',
+            url: '/addresses/search',
+            data: {
+                city: $('input[id=check_city]').val(),
+                street: $('input[id=check_street]').val(),
+                build: $('input[id=check_build]').val()
+            },
+            success: function (data) {
+                if (data) {
+                    $(".address_hidden_true").css("display", "block");
+                    mapZoom();
+                } else {
+                    $(".address_hidden_false").css("display", "block");
+                };
+            },
+            error: function(data) {
+                console.log('errors');
+            }
+        });
+    });
+
+    var form = $('#addressForm');
+    $(form).on("submit", function () {
+        form.validate();
+        if (form.valid()) {
+            $.ajax({
+                url: "/addresses/add_address",
+                type: 'post',
+                data: form.serialize(),
+                success: function (response) {
+                        console.log(response);
+                    },
+                error: function (response, error) {
+                    console.log('error', response);
+                }
+            });
+        }
+    })
+</script>
+</body>
+</html>

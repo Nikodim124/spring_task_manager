@@ -1,0 +1,8 @@
+<div th:text="'Клиент: '+${appeal.client}" style="margin-bottom: 10px"></div>
+<div th:text="'Адрес объекта: '+${appeal.address}+', кв. '+${appeal.appart}" style="margin-bottom: 10px"></div>
+<div th:text="'Дата заявки: '+${appeal.stringTaskdate}+', период: '+${appeal.tasktime.time}" style="margin-bottom: 10px"></div>
+<div th:text="${appeal.manager != null} ? 'Менеджер: '+${appeal.manager.lastname}+' '+${appeal.manager.firstname}+' '+${appeal.manager.upname}+', тел. '+${appeal.manager.phone} : 'Не назначено'" style="margin-bottom: 10px"></div>
+<div th:text="'Комментарий: '+${appeal.comment}" style="margin-bottom: 10px"></div>
+<div id="field_id" th:text="${appeal.id}" hidden></div>
+<a th:href="'/home/done_appeal/'+${appeal.id}" class="doneappeal">Выполнено</a>
+<a href="#close-modal" rel="modal:close" class="close-modal ">Close</a>
